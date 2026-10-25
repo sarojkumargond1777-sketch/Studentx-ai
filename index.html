@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentX AI - JEE Solver</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#fff;font-family:Arial,sans-serif}
+header{text-align:center;padding:25px 15px;background:#151d33}
+h1{color:#60a5fa;margin:0}
+header p{color:#cbd5e1}
+main{max-width:750px;margin:25px auto;padding:15px}
+.box{background:#151d33;padding:20px;border-radius:16px}
+textarea{width:100%;height:140px;padding:14px;border-radius:10px;border:1px solid #475569;background:#0b1020;color:#fff;font-size:16px;resize:vertical}
+button{width:100%;padding:14px;margin-top:12px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-size:17px;font-weight:bold}
+button:disabled{opacity:.6}
+#status{color:#fbbf24;white-space:pre-wrap}
+#answer{background:#0b1020;padding:15px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;min-height:70px}
+footer{text-align:center;padding:20px;color:#94a3b8}
+</style>
+</head>
+<body>
+<header>
+<h1>StudentX AI</h1>
+<p>Your AI Study Partner | JEE Main & Advanced</p>
+</header>
+<main>
+<div class="box">
+<h2>Ask StudentX AI</h2>
+<textarea id="question" placeholder="Enter your Maths, Physics or Chemistry question..."></textarea>
+<button id="solve" onclick="solveQuestion()">Solve Question</button>
+<p id="status">Ready to help you learn.</p>
+<h3>Solution</h3>
+<div id="answer">Your step-by-step answer will appear here.</div>
+</div>
+</main>
+<footer>StudentX AI | Learn • Practice • Improve</footer>
+<script>
+const WORKER_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+
+async function solveQuestion(){
+const question=document.getElementById("question").value.trim();
+const status=document.getElementById("status");
+const answer=document.getElementById("answer");
+const button=document.getElementById("solve");
+
+if(!question){
+status.textContent="Please enter a question first.";
+return;
+}
+
+if(WORKER_URL.includes("PASTE_YOUR")){
+status.textContent="Please configure your Cloudflare Worker URL.";
+return;
+}
+
+button.disabled=true;
+status.textContent="Connecting to StudentX AI...";
+answer.textContent="Please wait...";
+
+try{
+const response=await fetch(WORKER_URL.replace(/\/+$/,"")+"/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({question:question})
+});
+
+const data=await response.json();
+
+if(!response.ok){
+throw new Error(data.error || data.details?.error || "HTTP "+response.status);
+}
+
+if(!data.answer){
+throw new Error("No answer received from AI.");
+}
+
+answer.textContent=data.answer;
+status.textContent="Answer received successfully!";
+}catch(error){
+status.textContent="AI connection failed: "+error.message;
+answer.textContent="Please check your Worker URL and Hugging Face API settings.";
+}finally{
+button.disabled=false;
+}
+}
+</script>
+</body>
+</html>
